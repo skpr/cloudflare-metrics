@@ -22,6 +22,10 @@ build:
 lint:
 	golint -set_exit_status `go list ./... | grep -v /vendor/`
 
+# Run go vet against code
+vet:
+	go vet ./...
+
 # Run tests with coverage reporting.
 test:
 	go test -cover ./...
