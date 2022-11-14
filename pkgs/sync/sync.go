@@ -29,8 +29,8 @@ func NewMetricsSyncer(config util.Config, metricsCollectors []types.MetricsColle
 }
 
 // Start calls each collector to collect cloudflare metrics then pushes them to aws cloudwatch metrics.
-func (m *MetricsSyncer) Start(ctx context.Context, cancelFunc context.CancelFunc) {
-	ticker := time.NewTicker(time.Second * time.Duration(m.config.FrequencySeconds))
+func (s *MetricsSyncer) Start(ctx context.Context, cancelFunc context.CancelFunc) {
+	ticker := time.NewTicker(time.Second * time.Duration(s.config.FrequencySeconds))
 	for {
 		select {
 		case <-ctx.Done():
@@ -39,17 +39,17 @@ func (m *MetricsSyncer) Start(ctx context.Context, cancelFunc context.CancelFunc
 			return
 		case <-ticker.C:
 			end := time.Now()
-			start := end.Add(-time.Second * time.Duration(m.config.PeriodSeconds))
+			start := end.Add(-time.Second * time.Duration(s.config.PeriodSeconds))
 			fmt.Println("Fetching cache stats from", start.Format(time.RFC3339), "to", end.Format(time.RFC3339))
 			var data []awstypes.MetricDatum
-			for _, collector := range m.metricsCollectors {
+			for _, collector := range s.metricsCollectors {
 				d, err := collector.CollectMetrics(ctx, start, end)
 				if err != nil {
 					log.Println("failed to get data", err)
 				}
 				data = append(data, d...)
 			}
-			err := m.metricsPusher.Push(ctx, "Skpr/CloudFlare", data)
+			err := s.metricsPusher.Push(ctx, s.config.MetricsNamespace, data)
 			if err != nil {
 				log.Println("failed to push metrics", err)
 			}

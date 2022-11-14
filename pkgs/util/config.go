@@ -11,6 +11,7 @@ type Config struct {
 	CloudFlareEndpointURL string `mapstructure:"CLOUDFLARE_ENDPOINT_URL"`
 	FrequencySeconds      int32  `mapstructure:"FREQUENCY_SECONDS"`
 	PeriodSeconds         int32  `mapstructure:"PERIOD_SECONDS"`
+	MetricsNamespace      string `mapstructure:"METRICS_NAMESPACE"`
 }
 
 // LoadConfig reads configuration from file or environment variables.
