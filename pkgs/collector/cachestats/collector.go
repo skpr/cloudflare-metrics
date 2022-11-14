@@ -1,4 +1,4 @@
-package cache_stats
+package cachestats
 
 import (
 	"context"
@@ -8,25 +8,27 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hasura/go-graphql-client"
 
-	"github.com/skpr/cloudflare-metrics/pkgs/collector/types"
-	types2 "github.com/skpr/cloudflare-metrics/pkgs/types"
+	"github.com/skpr/cloudflare-metrics/pkgs/types"
 	"github.com/skpr/cloudflare-metrics/pkgs/util"
 )
 
-type CacheStatsCollector struct {
-	types2.MetricCollector
-	client types.GraphQLClient
+// Collector defines a cache stat collector.
+type Collector struct {
+	types.MetricsCollector
 	config util.Config
+	client types.GraphQLClient
 }
 
-func NewCacheStatsCollector(client types.GraphQLClient, config util.Config) *CacheStatsCollector {
-	return &CacheStatsCollector{
-		client: client,
+// NewCacheStatsCollector creates a new cache stat collector.
+func NewCacheStatsCollector(config util.Config, client types.GraphQLClient) *Collector {
+	return &Collector{
 		config: config,
+		client: client,
 	}
 }
 
-func (c *CacheStatsCollector) CollectMetrics(ctx context.Context, start, end time.Time) ([]awstypes.MetricDatum, error) {
+// CollectMetrics calls the graphQL endpoint to collect cache stats.
+func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([]awstypes.MetricDatum, error) {
 	var q struct {
 		Viewer struct {
 			Zones []struct {

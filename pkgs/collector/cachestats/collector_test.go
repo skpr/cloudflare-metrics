@@ -1,4 +1,4 @@
-package cache_stats
+package cachestats
 
 import (
 	"context"
@@ -22,7 +22,7 @@ func TestFetch(t *testing.T) {
 	))
 	client := graphql.NewClient(config.CloudFlareEndpointURL, httpClient).WithDebug(true)
 
-	fetcher := NewCacheStatsCollector(client, config)
+	fetcher := NewCacheStatsCollector(config, client)
 	end := time.Now()
 	start := end.Add(-time.Minute)
 

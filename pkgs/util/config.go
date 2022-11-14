@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Config defines the application config.
 type Config struct {
 	CloudFlareAPIToken    string `mapstructure:"CLOUDFLARE_API_TOKEN"`
 	CloudFlareZoneID      string `mapstructure:"CLOUDFLARE_ZONE_ID"`
