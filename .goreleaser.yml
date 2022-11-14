@@ -1,0 +1,21 @@
+# Documentation at http://goreleaser.com
+builds:
+  - env: [ CGO_ENABLED=0 ]
+    goos: [ linux, darwin ]
+    goarch: [ amd64 ]
+    ldflags:
+      - -extldflags '-static' -X main.GitVersion={{.Version}}
+archives:
+  - replacements:
+      darwin: macOS
+    format: binary
+dockers:
+  - image_templates:
+      - "skpr/cloudflare-metrics:latest"
+      - "skpr/cloudflare-metrics:{{ .Tag }}"
+    build_flag_templates: [ "--pull" ]
+release:
+  prerelease: auto
+  github:
+    owner: skpr
+    name: cloudflare-metrics

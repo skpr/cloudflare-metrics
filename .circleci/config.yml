@@ -1,0 +1,49 @@
+version: 2.1
+
+workflows:
+  build:
+    jobs:
+      - build
+  release:
+    jobs:
+      - release:
+          context: org-global
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              # Only on tags formatted like v0.1.1
+              only: /^v\d+\.\d+\.\d+$/
+
+jobs:
+  build:
+    docker:
+      - image: golang:1.17
+    steps:
+      - checkout
+      - run:
+          name: Vet
+          command: |
+            make vet
+      - run:
+          name: Lint
+          command: |
+            go install golang.org/x/lint/golint@latest
+            make lint
+      - run:
+          name: Test
+          command: |
+            go install gotest.tools/gotestsum@v1.7.0
+            mkdir -p test-results/junit
+            gotestsum --junitfile test-results/junit/junit-report.xml
+      - store_test_results:
+          path: test-results
+
+  release:
+    docker:
+      - image: docker.io/goreleaser/goreleaser:latest
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: goreleaser
