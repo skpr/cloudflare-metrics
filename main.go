@@ -29,7 +29,7 @@ func main() {
 	}
 
 	fmt.Println("Starting server", GitVersion)
-	fmt.Println("Syncing metrics every", config.FrequencySeconds, "seconds")
+	fmt.Println("Syncing metrics every", config.PeriodSeconds, "seconds")
 
 	// Handle interrupt signal gracefully.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
