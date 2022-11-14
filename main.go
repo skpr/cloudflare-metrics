@@ -16,13 +16,20 @@ import (
 	"github.com/skpr/cloudflare-metrics/pkgs/util"
 )
 
+var (
+	// GitVersion overridden at build time by:
+	//   -ldflags="-X main.GitVersion=${VERSION}"
+	GitVersion string
+)
+
 func main() {
 	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatal("failed to load config:", err)
 	}
 
-	fmt.Println("Starting metrics sync every", config.FrequencySeconds, "seconds")
+	fmt.Println("Starting server", GitVersion)
+	fmt.Println("Syncing metrics every", config.FrequencySeconds, "seconds")
 
 	// Handle interrupt signal gracefully.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
