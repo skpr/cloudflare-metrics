@@ -1,9 +1,8 @@
-package statuscodes
+package toppaths
 
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,18 +30,18 @@ func NewCollector(config util.Config, client types.GraphQLClient) *Collector {
 
 // CollectMetrics calls the graphQL endpoint to collect metrics.
 func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([]awstypes.MetricDatum, error) {
-	fmt.Println("Fetching status code metrics...")
+	fmt.Println("Fetching top paths metrics...")
 	var q struct {
 		Viewer struct {
 			Zones []struct {
-				ZoneTag         string
-				EdgeStatusCodes []struct {
+				ZoneTag  string
+				TopPaths []struct {
 					Avg struct {
 						SampleInterval float64
 					}
 					Count      int32
 					Dimensions struct {
-						EdgeResponseStatus    int    `graphql:"metric: edgeResponseStatus"`
+						ClientRequestPath     string `graphql:"metric: clientRequestPath"`
 						ClientRequestHTTPHost string `graphql:"clientRequestHTTPHost"`
 					}
 					Sum struct {
@@ -73,18 +72,18 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 
 	var data []awstypes.MetricDatum
 	for _, zone := range q.Viewer.Zones {
-		for _, statusCode := range zone.EdgeStatusCodes {
+		for _, topPath := range zone.TopPaths {
 			d := []awstypes.MetricDatum{
 				{
 					MetricName: aws.String("requests"),
 					Dimensions: []awstypes.Dimension{
 						{
-							Name:  aws.String("statusCode"),
-							Value: aws.String(strconv.Itoa(statusCode.Dimensions.EdgeResponseStatus)),
+							Name:  aws.String("requestPath"),
+							Value: aws.String(topPath.Dimensions.ClientRequestPath),
 						},
 						{
 							Name:  aws.String("host"),
-							Value: aws.String(statusCode.Dimensions.ClientRequestHTTPHost),
+							Value: aws.String(topPath.Dimensions.ClientRequestHTTPHost),
 						},
 						{
 							Name:  aws.String("zone"),
@@ -92,7 +91,7 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 						},
 					},
 					Timestamp: aws.Time(end),
-					Value:     aws.Float64(float64(statusCode.Count)),
+					Value:     aws.Float64(float64(topPath.Count)),
 				},
 			}
 			data = append(data, d...)
