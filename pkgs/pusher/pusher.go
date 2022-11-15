@@ -2,6 +2,7 @@ package pusher
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -31,5 +32,6 @@ func (p *Pusher) Push(ctx context.Context, namespace string, metricData []awstyp
 	if err != nil {
 		return err
 	}
+	fmt.Println("Pushed", len(metricData), "metrics")
 	return nil
 }

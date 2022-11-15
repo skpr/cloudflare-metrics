@@ -7,6 +7,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/skpr/cloudflare-metrics/pkgs/collector/cachestats"
+	"github.com/skpr/cloudflare-metrics/pkgs/collector/statuscodes"
 	"github.com/skpr/cloudflare-metrics/pkgs/types"
 	"github.com/skpr/cloudflare-metrics/pkgs/util"
 )
@@ -33,8 +34,9 @@ func (c *CollectorRegistry) GetCollectors(ctx context.Context) []types.MetricsCo
 	graphQLClient := graphql.NewClient(c.config.CloudFlareEndpointURL, httpClient)
 
 	cacheStatsCollector := cachestats.NewCacheStatsCollector(c.config, graphQLClient)
+	statusCodesCollector := statuscodes.NewStatusCodesCollector(c.config, graphQLClient)
 
-	c.collectors = append(c.collectors, cacheStatsCollector)
+	c.collectors = append(c.collectors, cacheStatsCollector, statusCodesCollector)
 
 	return c.collectors
 }
