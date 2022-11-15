@@ -40,7 +40,6 @@ func (s *MetricsSyncer) Start(ctx context.Context, cancelFunc context.CancelFunc
 		case <-ticker.C:
 			end := time.Now()
 			start := end.Add(-time.Second * time.Duration(s.config.PeriodSeconds))
-			fmt.Println("Fetching cache stats from", start.Format(time.RFC3339), "to", end.Format(time.RFC3339))
 			var data []awstypes.MetricDatum
 			for _, collector := range s.metricsCollectors {
 				d, err := collector.CollectMetrics(ctx, start, end)
