@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -26,6 +27,11 @@ func main() {
 	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatal("failed to load config:", err)
+	}
+	errors := config.Validate()
+	if len(errors) > 0 {
+		fmt.Printf("Configuration error:\n%s\n", strings.Join(errors, "\n"))
+		os.Exit(1)
 	}
 
 	fmt.Println("Starting server", GitVersion)

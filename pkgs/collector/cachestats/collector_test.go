@@ -13,7 +13,8 @@ import (
 	"github.com/skpr/cloudflare-metrics/pkgs/util"
 )
 
-func TestFetch(t *testing.T) {
+func TestCollect(t *testing.T) {
+	t.Skip("Do not test using real config")
 	// client := mock.NewMockClient()
 	config, err := util.LoadConfig("../../..")
 	assert.NoError(t, err)

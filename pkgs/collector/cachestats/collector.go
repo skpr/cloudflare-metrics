@@ -32,6 +32,7 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 	var q struct {
 		Viewer struct {
 			Zones []struct {
+				ZoneTag     string
 				CacheStatus []struct {
 					Avg struct {
 						SampleInterval float64
@@ -45,12 +46,12 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 						EdgeResponseBytes int32
 					}
 				} `graphql:"httpRequestsAdaptiveGroups(limit: 50, filter: $filter, orderBy: [count_DESC])"`
-			} `graphql:"zones(filter: {zoneTag: $zoneTag})"`
+			} `graphql:"zones(filter: {zoneTag_in: $zoneTags})"`
 		}
 	}
 
 	variables := map[string]interface{}{
-		"zoneTag": c.config.CloudFlareZoneID,
+		"zoneTags": c.config.CloudFlareZoneTags,
 		"filter": map[string]interface{}{
 			"AND": []map[string]interface{}{
 				{
@@ -85,7 +86,7 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 						},
 						{
 							Name:  aws.String("zone"),
-							Value: aws.String(c.config.CloudFlareZoneID),
+							Value: aws.String(zone.ZoneTag),
 						},
 					},
 					Timestamp: aws.Time(end),
@@ -104,7 +105,7 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 						},
 						{
 							Name:  aws.String("zone"),
-							Value: aws.String(c.config.CloudFlareZoneID),
+							Value: aws.String(zone.ZoneTag),
 						},
 					},
 					Timestamp: aws.Time(end),
