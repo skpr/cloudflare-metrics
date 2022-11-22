@@ -30,7 +30,7 @@ func NewCollector(config util.Config, client types.GraphQLClient) *Collector {
 
 // CollectMetrics calls the graphQL endpoint to collect cache stats.
 func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([]awstypes.MetricDatum, error) {
-	fmt.Println("Fetching cache stat Metrics...")
+	fmt.Println("Fetching cache stat metrics...")
 	var q struct {
 		Viewer struct {
 			Zones []struct {
@@ -80,11 +80,14 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 					},
 					Timestamp: aws.Time(end),
 					Value:     aws.Float64(float64(cacheStatus.Count)),
+					Unit:      awstypes.StandardUnitCount,
 				},
 			}
 			data = append(data, d...)
 		}
 	}
+
+	fmt.Println("Generated", len(data), "cache stat metrics")
 
 	return data, nil
 }

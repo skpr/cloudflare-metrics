@@ -73,15 +73,19 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 					MetricName: aws.String("totalRequests"),
 					Timestamp:  aws.Time(end),
 					Value:      aws.Float64(float64(total.Count)),
+					Unit:       awstypes.StandardUnitCount,
 				},
 				{
 					MetricName: aws.String("totalResponseBytes"),
 					Timestamp:  aws.Time(end),
 					Value:      aws.Float64(float64(total.Sum.EdgeResponseBytes)),
+					Unit:       awstypes.StandardUnitBytes,
 				},
 			}
 			data = append(data, d...)
 		}
 	}
+	fmt.Println("Generated", len(data), "total metrics")
+
 	return data, nil
 }

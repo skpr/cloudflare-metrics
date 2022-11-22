@@ -80,10 +80,13 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 					},
 					Timestamp: aws.Time(end),
 					Value:     aws.Float64(float64(metric.Count)),
+					Unit:      awstypes.StandardUnitCount,
 				},
 			}
 			data = append(data, d...)
 		}
 	}
+	fmt.Println("Generated", len(data), "status code metrics")
+
 	return data, nil
 }
