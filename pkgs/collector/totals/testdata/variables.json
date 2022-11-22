@@ -1,0 +1,17 @@
+{
+  "zoneTag": "abcd1234",
+  "filter": {
+    "AND": [
+      {
+        "datetime_geq": "2022-11-22T02:20:39Z",
+        "datetime_lt": "2022-11-22T02:25:39Z"
+      },
+      {
+        "requestSource": "eyeball"
+      },
+      {
+        "clientRequestHTTPHost": "example.com"
+      }
+    ]
+  }
+}

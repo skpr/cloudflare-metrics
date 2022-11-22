@@ -1,0 +1,12 @@
+query Totals {
+    viewer {
+        zones(filter: { zoneTag: $zoneTag }) {
+            totals: httpRequestsAdaptiveGroups(filter: $filter, limit: 1) {
+                count
+                sum {
+                    edgeResponseBytes
+                }
+            }
+        }
+    }
+}

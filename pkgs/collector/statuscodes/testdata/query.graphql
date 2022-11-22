@@ -1,0 +1,12 @@
+query StatusCodes {
+    viewer {
+        zones(filter: { zoneTag: $zoneTag }) {
+            metrics: httpRequestsAdaptiveGroups(filter: $filter, limit: 15, orderBy: [edgeResponseStatus_ASC]) {
+                count
+                dimensions {
+                    status: edgeResponseStatus
+                }
+            }
+        }
+    }
+}

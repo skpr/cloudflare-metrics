@@ -1,0 +1,12 @@
+query StatusCodes {
+    viewer {
+        zones(filter: { zoneTag: $zoneTag }) {
+            metrics: httpRequestsAdaptiveGroups(filter: $filter, limit: 10, orderBy: [cacheStatus_ASC]) {
+                count
+                dimensions {
+                    cacheStatus
+                }
+            }
+        }
+    }
+}
