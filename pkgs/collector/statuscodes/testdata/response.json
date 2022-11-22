@@ -1,0 +1,61 @@
+{
+  "data": {
+    "viewer": {
+      "zones": [
+        {
+          "metrics": [
+            {
+              "count": 3182,
+              "dimensions": {
+                "status": 200
+              }
+            },
+            {
+              "count": 235,
+              "dimensions": {
+                "status": 202
+              }
+            },
+            {
+              "count": 146,
+              "dimensions": {
+                "status": 301
+              }
+            },
+            {
+              "count": 214,
+              "dimensions": {
+                "status": 302
+              }
+            },
+            {
+              "count": 82,
+              "dimensions": {
+                "status": 304
+              }
+            },
+            {
+              "count": 364,
+              "dimensions": {
+                "status": 403
+              }
+            },
+            {
+              "count": 4,
+              "dimensions": {
+                "status": 404
+              }
+            },
+            {
+              "count": 5,
+              "dimensions": {
+                "status": 499
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "errors": null
+}

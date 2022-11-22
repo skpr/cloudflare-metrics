@@ -1,4 +1,4 @@
-package toppaths
+package totals
 
 import (
 	"context"
@@ -30,29 +30,21 @@ func NewCollector(config util.Config, client types.GraphQLClient) *Collector {
 
 // CollectMetrics calls the graphQL endpoint to collect metrics.
 func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([]awstypes.MetricDatum, error) {
-	fmt.Println("Fetching top paths metrics...")
+	fmt.Println("Fetching request totals metrics...")
 	var q struct {
 		Viewer struct {
 			Zones []struct {
-				ZoneTag  string
-				TopPaths []struct {
-					Avg struct {
-						SampleInterval float64
+				Metrics []struct {
+					Count int32
+					Sum   struct {
+						EdgeResponseBytes int64
 					}
-					Count      int32
-					Dimensions struct {
-						ClientRequestPath     string `graphql:"metric: clientRequestPath"`
-						ClientRequestHTTPHost string `graphql:"clientRequestHTTPHost"`
-					}
-					Sum struct {
-						EdgeResponseBytes int32
-					}
-				} `graphql:"httpRequestsAdaptiveGroups(limit: 15, filter: $filter, orderBy: [count_DESC])"`
-			} `graphql:"zones(filter: {zoneTag_in: $zoneTags})"`
+				} `graphql:"metrics: httpRequestsAdaptiveGroups(limit: 1, filter: $filter)"`
+			} `graphql:"zones(filter: {zoneTag: $zoneTag})"`
 		}
 	}
 	variables := map[string]interface{}{
-		"zoneTags": c.config.CloudFlareZoneTags,
+		"zoneTag": c.config.CloudFlareZoneTag,
 		"filter": map[string]interface{}{
 			"AND": []map[string]interface{}{
 				{
@@ -62,40 +54,38 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 				{
 					"requestSource": "eyeball",
 				},
+				{
+					"clientRequestHTTPHost": c.config.CloudFlareHostName,
+				},
 			},
 		},
 	}
-	err := c.client.Query(ctx, &q, variables, graphql.OperationName("TopPaths"))
+	err := c.client.Query(ctx, &q, variables, graphql.OperationName("Metrics"))
 	if err != nil {
 		return []awstypes.MetricDatum{}, err
 	}
 
 	var data []awstypes.MetricDatum
 	for _, zone := range q.Viewer.Zones {
-		for _, topPath := range zone.TopPaths {
+		for _, total := range zone.Metrics {
 			d := []awstypes.MetricDatum{
 				{
-					MetricName: aws.String("requests"),
-					Dimensions: []awstypes.Dimension{
-						{
-							Name:  aws.String("requestPath"),
-							Value: aws.String(topPath.Dimensions.ClientRequestPath),
-						},
-						{
-							Name:  aws.String("host"),
-							Value: aws.String(topPath.Dimensions.ClientRequestHTTPHost),
-						},
-						{
-							Name:  aws.String("zone"),
-							Value: aws.String(zone.ZoneTag),
-						},
-					},
-					Timestamp: aws.Time(end),
-					Value:     aws.Float64(float64(topPath.Count)),
+					MetricName: aws.String("totalRequests"),
+					Timestamp:  aws.Time(end),
+					Value:      aws.Float64(float64(total.Count)),
+					Unit:       awstypes.StandardUnitCount,
+				},
+				{
+					MetricName: aws.String("totalResponseBytes"),
+					Timestamp:  aws.Time(end),
+					Value:      aws.Float64(float64(total.Sum.EdgeResponseBytes)),
+					Unit:       awstypes.StandardUnitBytes,
 				},
 			}
 			data = append(data, d...)
 		}
 	}
+	fmt.Println("Generated", len(data), "total metrics")
+
 	return data, nil
 }

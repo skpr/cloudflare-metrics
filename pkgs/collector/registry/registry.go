@@ -8,7 +8,7 @@ import (
 
 	"github.com/skpr/cloudflare-metrics/pkgs/collector/cachestats"
 	"github.com/skpr/cloudflare-metrics/pkgs/collector/statuscodes"
-	"github.com/skpr/cloudflare-metrics/pkgs/collector/toppaths"
+	"github.com/skpr/cloudflare-metrics/pkgs/collector/totals"
 	"github.com/skpr/cloudflare-metrics/pkgs/types"
 	"github.com/skpr/cloudflare-metrics/pkgs/util"
 )
@@ -34,11 +34,11 @@ func (c *CollectorRegistry) GetCollectors(ctx context.Context) []types.MetricsCo
 
 	graphQLClient := graphql.NewClient(c.config.CloudFlareEndpointURL, httpClient)
 
-	cacheStatsCollector := cachestats.NewCacheStatsCollector(c.config, graphQLClient)
+	cacheStatsCollector := cachestats.NewCollector(c.config, graphQLClient)
 	statusCodesCollector := statuscodes.NewCollector(c.config, graphQLClient)
-	topPathsCollector := toppaths.NewCollector(c.config, graphQLClient)
+	totalsCollector := totals.NewCollector(c.config, graphQLClient)
 
-	c.collectors = append(c.collectors, cacheStatsCollector, statusCodesCollector, topPathsCollector)
+	c.collectors = append(c.collectors, cacheStatsCollector, statusCodesCollector, totalsCollector)
 
 	return c.collectors
 }

@@ -1,0 +1,19 @@
+{
+  "data": {
+    "viewer": {
+      "zones": [
+        {
+          "metrics": [
+            {
+              "count": 4232,
+              "sum": {
+                "edgeResponseBytes": 91319486
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "errors": null
+}
