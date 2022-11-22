@@ -35,25 +35,17 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 	var q struct {
 		Viewer struct {
 			Zones []struct {
-				ZoneTag         string
-				EdgeStatusCodes []struct {
-					Avg struct {
-						SampleInterval float64
-					}
+				Metrics []struct {
 					Count      int32
 					Dimensions struct {
-						EdgeResponseStatus    int    `graphql:"metric: edgeResponseStatus"`
-						ClientRequestHTTPHost string `graphql:"clientRequestHTTPHost"`
+						EdgeResponseStatus int `graphql:"status: edgeResponseStatus"`
 					}
-					Sum struct {
-						EdgeResponseBytes int32
-					}
-				} `graphql:"httpRequestsAdaptiveGroups(limit: 15, filter: $filter, orderBy: [count_DESC])"`
-			} `graphql:"zones(filter: {zoneTag_in: $zoneTags})"`
+				} `graphql:"metrics: httpRequestsAdaptiveGroups(limit: 15, filter: $filter, orderBy: [edgeResponseStatus_ASC])"`
+			} `graphql:"zones(filter: {zoneTag: $zoneTag})"`
 		}
 	}
 	variables := map[string]interface{}{
-		"zoneTags": c.config.CloudFlareZoneTags,
+		"zoneTag": c.config.CloudFlareZoneTag,
 		"filter": map[string]interface{}{
 			"AND": []map[string]interface{}{
 				{
@@ -62,6 +54,9 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 				},
 				{
 					"requestSource": "eyeball",
+				},
+				{
+					"clientRequestHTTPHost": c.config.CloudFlareHostName,
 				},
 			},
 		},
@@ -73,26 +68,18 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 
 	var data []awstypes.MetricDatum
 	for _, zone := range q.Viewer.Zones {
-		for _, statusCode := range zone.EdgeStatusCodes {
+		for _, metric := range zone.Metrics {
 			d := []awstypes.MetricDatum{
 				{
-					MetricName: aws.String("requests"),
+					MetricName: aws.String("statusCodeRequests"),
 					Dimensions: []awstypes.Dimension{
 						{
 							Name:  aws.String("statusCode"),
-							Value: aws.String(strconv.Itoa(statusCode.Dimensions.EdgeResponseStatus)),
-						},
-						{
-							Name:  aws.String("host"),
-							Value: aws.String(statusCode.Dimensions.ClientRequestHTTPHost),
-						},
-						{
-							Name:  aws.String("zone"),
-							Value: aws.String(zone.ZoneTag),
+							Value: aws.String(strconv.Itoa(metric.Dimensions.EdgeResponseStatus)),
 						},
 					},
 					Timestamp: aws.Time(end),
-					Value:     aws.Float64(float64(statusCode.Count)),
+					Value:     aws.Float64(float64(metric.Count)),
 				},
 			}
 			data = append(data, d...)

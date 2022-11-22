@@ -1,0 +1,49 @@
+{
+  "data": {
+    "viewer": {
+      "zones": [
+        {
+          "metrics": [
+            {
+              "count": 362,
+              "dimensions": {
+                "cacheStatus": "dynamic"
+              }
+            },
+            {
+              "count": 13,
+              "dimensions": {
+                "cacheStatus": "expired"
+              }
+            },
+            {
+              "count": 2330,
+              "dimensions": {
+                "cacheStatus": "hit"
+              }
+            },
+            {
+              "count": 845,
+              "dimensions": {
+                "cacheStatus": "miss"
+              }
+            },
+            {
+              "count": 51,
+              "dimensions": {
+                "cacheStatus": "none"
+              }
+            },
+            {
+              "count": 170,
+              "dimensions": {
+                "cacheStatus": "revalidated"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "errors": null
+}

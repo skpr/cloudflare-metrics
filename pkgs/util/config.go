@@ -6,11 +6,12 @@ import (
 
 // Config defines the application config.
 type Config struct {
-	CloudFlareAPIToken    string   `mapstructure:"CLOUDFLARE_API_TOKEN"`
-	CloudFlareZoneTags    []string `mapstructure:"CLOUDFLARE_ZONE_TAGS"`
-	CloudFlareEndpointURL string   `mapstructure:"CLOUDFLARE_ENDPOINT_URL"`
-	PeriodSeconds         int32    `mapstructure:"PERIOD_SECONDS"`
-	MetricsNamespace      string   `mapstructure:"METRICS_NAMESPACE"`
+	CloudFlareAPIToken    string `mapstructure:"CLOUDFLARE_API_TOKEN"`
+	CloudFlareZoneTag     string `mapstructure:"CLOUDFLARE_ZONE_TAG"`
+	CloudFlareHostName    string `mapstructure:"CLOUDFLARE_HOSTNAME"`
+	CloudFlareEndpointURL string `mapstructure:"CLOUDFLARE_ENDPOINT_URL"`
+	PeriodSeconds         int32  `mapstructure:"PERIOD_SECONDS"`
+	MetricsNamespace      string `mapstructure:"METRICS_NAMESPACE"`
 }
 
 // Validate validates the config.
@@ -19,8 +20,11 @@ func (c Config) Validate() []string {
 	if c.CloudFlareAPIToken == "" {
 		errors = append(errors, "CLOUDFLARE_API_TOKEN is a required variable")
 	}
-	if len(c.CloudFlareZoneTags) == 0 {
-		errors = append(errors, "CLOUDFLARE_ZONE_TAGS is a required variable")
+	if c.CloudFlareZoneTag == "" {
+		errors = append(errors, "CLOUDFLARE_ZONE_TAG is a required variable")
+	}
+	if c.CloudFlareHostName == "" {
+		errors = append(errors, "CLOUDFLARE_HOSTNAME is a required variable")
 	}
 	if c.CloudFlareEndpointURL == "" {
 		errors = append(errors, "CLOUDFLARE_ENDPOINT_URL is a required variable")
