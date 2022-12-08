@@ -9,6 +9,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hasura/go-graphql-client"
 
+	"github.com/skpr/cloudflare-metrics/pkgs/collector/variables"
 	"github.com/skpr/cloudflare-metrics/pkgs/types"
 	"github.com/skpr/cloudflare-metrics/pkgs/util"
 )
@@ -43,24 +44,15 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 			} `graphql:"zones(filter: {zoneTag: $zoneTag})"`
 		}
 	}
-	variables := map[string]interface{}{
-		"zoneTag": c.config.CloudFlareZoneTag,
-		"filter": map[string]interface{}{
-			"AND": []map[string]interface{}{
-				{
-					"datetime_geq": start.Format(time.RFC3339),
-					"datetime_leq": end.Format(time.RFC3339),
-				},
-				{
-					"requestSource": "eyeball",
-				},
-				{
-					"clientRequestHTTPHost": c.config.CloudFlareHostName,
-				},
-			},
-		},
-	}
-	err := c.client.Query(ctx, &q, variables, graphql.OperationName("Metrics"))
+
+	v := variables.NewBuilder().
+		WithZoneTag(c.config.CloudFlareZoneTag).
+		WithStart(start).
+		WithEnd(end).
+		WithHostnames(c.config.CloudFlareHostNames).
+		Build()
+
+	err := c.client.Query(ctx, &q, v, graphql.OperationName("Metrics"))
 	if err != nil {
 		return []awstypes.MetricDatum{}, err
 	}

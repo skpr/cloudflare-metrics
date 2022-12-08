@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -28,14 +27,9 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to load config:", err)
 	}
-	errors := config.Validate()
-	if len(errors) > 0 {
-		fmt.Printf("Configuration error:\n%s\n", strings.Join(errors, "\n"))
-		os.Exit(1)
-	}
 
 	fmt.Println("Starting server", GitVersion)
-	fmt.Println("Syncing metrics every", config.PeriodSeconds, "seconds")
+	fmt.Println("Syncing metrics every", config.Period, "seconds")
 
 	// Handle interrupt signal gracefully.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)

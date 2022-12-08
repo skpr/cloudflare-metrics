@@ -92,6 +92,16 @@ github.com/davecgh/go-spew/spew
 # github.com/fsnotify/fsnotify v1.6.0
 ## explicit; go 1.16
 github.com/fsnotify/fsnotify
+# github.com/go-playground/locales v0.13.0
+## explicit; go 1.13
+github.com/go-playground/locales
+github.com/go-playground/locales/currency
+# github.com/go-playground/universal-translator v0.17.0
+## explicit; go 1.13
+github.com/go-playground/universal-translator
+# github.com/go-playground/validator/v10 v10.2.0
+## explicit; go 1.13
+github.com/go-playground/validator/v10
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
 github.com/golang/protobuf/proto
@@ -121,6 +131,9 @@ github.com/jmespath/go-jmespath
 # github.com/klauspost/compress v1.10.3
 ## explicit; go 1.13
 github.com/klauspost/compress/flate
+# github.com/leodido/go-urn v1.2.0
+## explicit; go 1.13
+github.com/leodido/go-urn
 # github.com/magiconair/properties v1.8.6
 ## explicit; go 1.13
 github.com/magiconair/properties
