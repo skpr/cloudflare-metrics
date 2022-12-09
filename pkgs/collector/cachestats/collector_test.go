@@ -10,11 +10,35 @@ import (
 
 	"github.com/hasura/go-graphql-client"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 
 	"github.com/skpr/cloudflare-metrics/pkgs/util"
 )
 
-func TestCollect(t *testing.T) {
+func TestCollect_Live(t *testing.T) {
+	t.Skip("Do not test on live APIs")
+
+	config, err := util.LoadConfig("../../..")
+	assert.NoError(t, err)
+	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: config.CloudFlareAPIToken},
+	))
+
+	client := graphql.NewClient(config.CloudFlareEndpointURL, httpClient)
+
+	fetcher := NewCollector(config, client)
+	end := time.Date(2022, 11, 22, 13, 30, 0, 0, time.UTC)
+	start := end.Add(-time.Minute * 5)
+
+	data, err := fetcher.CollectMetrics(context.Background(), start, end)
+	assert.NoError(t, err)
+
+	assert.Len(t, data, 6)
+
+	assert.Len(t, data[0].Dimensions, 3)
+}
+
+func TestCollect_Mock(t *testing.T) {
 	// t.Skip("Do not test using real config")
 	responseData, err := os.ReadFile("testdata/response.json")
 	assert.NoError(t, err)

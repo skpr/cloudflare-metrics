@@ -10,6 +10,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hasura/go-graphql-client"
 
+	"github.com/skpr/cloudflare-metrics/pkgs/collector/variables"
 	"github.com/skpr/cloudflare-metrics/pkgs/types"
 	"github.com/skpr/cloudflare-metrics/pkgs/util"
 )
@@ -44,43 +45,41 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 			} `graphql:"zones(filter: {zoneTag: $zoneTag})"`
 		}
 	}
-	variables := map[string]interface{}{
-		"zoneTag": c.config.CloudFlareZoneTag,
-		"filter": map[string]interface{}{
-			"AND": []map[string]interface{}{
-				{
-					"datetime_geq": start.Format(time.RFC3339),
-					"datetime_leq": end.Format(time.RFC3339),
-				},
-				{
-					"requestSource": "eyeball",
-				},
-				{
-					"clientRequestHTTPHost": c.config.CloudFlareHostName,
-				},
-			},
-		},
-	}
-	err := c.client.Query(ctx, &q, variables, graphql.OperationName("TopPaths"))
+
+	v := variables.NewBuilder().
+		WithZoneTag(c.config.CloudFlareZoneTag).
+		WithStart(start).
+		WithEnd(end).
+		WithHostnames(c.config.CloudFlareHostNames).
+		Build()
+
+	err := c.client.Query(ctx, &q, v, graphql.OperationName("TopPaths"))
 	if err != nil {
 		return []awstypes.MetricDatum{}, err
 	}
 
+	var extraDimensions = make([]awstypes.Dimension, 0)
+	for k, v := range c.config.ExtraDimensions {
+		extraDimensions = append(extraDimensions, awstypes.Dimension{
+			Name:  aws.String(k),
+			Value: aws.String(v),
+		})
+	}
 	var data []awstypes.MetricDatum
 	for _, zone := range q.Viewer.Zones {
 		for _, metric := range zone.Metrics {
+			dimensions := []awstypes.Dimension{{
+				Name:  aws.String("statusCode"),
+				Value: aws.String(strconv.Itoa(metric.Dimensions.EdgeResponseStatus)),
+			}}
+			dimensions = append(dimensions, extraDimensions...)
 			d := []awstypes.MetricDatum{
 				{
 					MetricName: aws.String("statusCodeRequests"),
-					Dimensions: []awstypes.Dimension{
-						{
-							Name:  aws.String("statusCode"),
-							Value: aws.String(strconv.Itoa(metric.Dimensions.EdgeResponseStatus)),
-						},
-					},
-					Timestamp: aws.Time(end),
-					Value:     aws.Float64(float64(metric.Count)),
-					Unit:      awstypes.StandardUnitCount,
+					Dimensions: dimensions,
+					Timestamp:  aws.Time(end),
+					Value:      aws.Float64(float64(metric.Count)),
+					Unit:       awstypes.StandardUnitCount,
 				},
 			}
 			data = append(data, d...)

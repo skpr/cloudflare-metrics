@@ -1,52 +1,62 @@
 package util
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
 )
 
 // Config defines the application config.
 type Config struct {
-	CloudFlareAPIToken    string `mapstructure:"CLOUDFLARE_API_TOKEN"`
-	CloudFlareZoneTag     string `mapstructure:"CLOUDFLARE_ZONE_TAG"`
-	CloudFlareHostName    string `mapstructure:"CLOUDFLARE_HOSTNAME"`
-	CloudFlareEndpointURL string `mapstructure:"CLOUDFLARE_ENDPOINT_URL"`
-	PeriodSeconds         int32  `mapstructure:"PERIOD_SECONDS"`
-	MetricsNamespace      string `mapstructure:"METRICS_NAMESPACE"`
+	CloudFlareAPIToken    string            `mapstructure:"CLOUDFLARE_METRICS_API_TOKEN" validate:"required"`
+	CloudFlareZoneTag     string            `mapstructure:"CLOUDFLARE_METRICS_ZONE_TAG" validate:"required"`
+	CloudFlareHostNames   []string          `mapstructure:"CLOUDFLARE_METRICS_HOSTNAMES"`
+	CloudFlareEndpointURL string            `mapstructure:"CLOUDFLARE_METRICS_ENDPOINT_URL"`
+	Period                time.Duration     `mapstructure:"CLOUDFLARE_METRICS_PERIOD"`
+	MetricsNamespace      string            `mapstructure:"CLOUDFLARE_METRICS_NAMESPACE" validate:"required"`
+	ExtraDimensionsRaw    []string          `mapstructure:"CLOUDFLARE_METRICS_EXTRA_DIMENSIONS"`
+	ExtraDimensions       map[string]string `mapstructure:"-"`
 }
 
-// Validate validates the config.
-func (c Config) Validate() []string {
-	var errors []string
-	if c.CloudFlareAPIToken == "" {
-		errors = append(errors, "CLOUDFLARE_API_TOKEN is a required variable")
+// GetDimensionsMap gets the dimension map.
+func (c *Config) buildDimensionsMap() error {
+	d := make(map[string]string)
+	for _, c := range c.ExtraDimensionsRaw {
+		parts := strings.Split(c, ":")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid dimension format %s", c)
+		}
+		d[parts[0]] = parts[1]
 	}
-	if c.CloudFlareZoneTag == "" {
-		errors = append(errors, "CLOUDFLARE_ZONE_TAG is a required variable")
-	}
-	if c.CloudFlareHostName == "" {
-		errors = append(errors, "CLOUDFLARE_HOSTNAME is a required variable")
-	}
-	if c.CloudFlareEndpointURL == "" {
-		errors = append(errors, "CLOUDFLARE_ENDPOINT_URL is a required variable")
-	}
-	if c.PeriodSeconds < 60 {
-		errors = append(errors, "PERIOD_SECONDS must be a valid integer greater than 60")
-	}
-	if c.MetricsNamespace == "" {
-		errors = append(errors, "METRICS_NAMESPACE is a required variable")
-	}
-	return errors
+	c.ExtraDimensions = d
+	return nil
 }
 
 // LoadConfig reads configuration from file or environment variables.
-func LoadConfig(path string) (config Config, err error) {
+func LoadConfig(path string) (Config, error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("local")
 	viper.SetConfigType("env")
 
 	viper.AutomaticEnv()
 
+	viper.SetDefault("CLOUDFLARE_METRICS_PERIOD", time.Minute)
+	viper.SetDefault("CLOUDFLARE_METRICS_ENDPOINT_URL", "https://api.cloudflare.com/client/v4/graphql")
+
+	// We don't use a dotenv file in prod.
 	_ = viper.ReadInConfig()
-	err = viper.Unmarshal(&config)
-	return
+
+	var config Config
+	err := viper.Unmarshal(&config)
+
+	validate := validator.New()
+	err = validate.Struct(&config)
+	if err != nil {
+		return Config{}, err
+	}
+	err = config.buildDimensionsMap()
+	return config, err
 }
