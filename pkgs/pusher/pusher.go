@@ -25,6 +25,10 @@ func NewPusher(cloudwatchClient types.CloudwatchInterface) *Pusher {
 
 // Push the metrics.
 func (p *Pusher) Push(ctx context.Context, namespace string, metricData []awstypes.MetricDatum) error {
+	if len(metricData) == 0 {
+		fmt.Println("No metrics to push!")
+		return nil
+	}
 	_, err := p.cloudwatchClient.PutMetricData(ctx, &cloudwatch.PutMetricDataInput{
 		MetricData: metricData,
 		Namespace:  aws.String(namespace),

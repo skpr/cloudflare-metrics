@@ -57,18 +57,27 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 		return []awstypes.MetricDatum{}, err
 	}
 
+	var extraDimensions = make([]awstypes.Dimension, 0)
+	for k, v := range c.config.ExtraDimensions {
+		extraDimensions = append(extraDimensions, awstypes.Dimension{
+			Name:  aws.String(k),
+			Value: aws.String(v),
+		})
+	}
 	var data []awstypes.MetricDatum
 	for _, zone := range q.Viewer.Zones {
 		for _, total := range zone.Metrics {
 			d := []awstypes.MetricDatum{
 				{
 					MetricName: aws.String("totalRequests"),
+					Dimensions: extraDimensions,
 					Timestamp:  aws.Time(end),
 					Value:      aws.Float64(float64(total.Count)),
 					Unit:       awstypes.StandardUnitCount,
 				},
 				{
 					MetricName: aws.String("totalResponseBytes"),
+					Dimensions: extraDimensions,
 					Timestamp:  aws.Time(end),
 					Value:      aws.Float64(float64(total.Sum.EdgeResponseBytes)),
 					Unit:       awstypes.StandardUnitBytes,

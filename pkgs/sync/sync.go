@@ -30,7 +30,7 @@ func NewMetricsSyncer(config util.Config, metricsCollectors []types.MetricsColle
 
 // Start calls each collector to collect cloudflare metrics then pushes them to aws cloudwatch metrics.
 func (s *MetricsSyncer) Start(ctx context.Context, cancelFunc context.CancelFunc) {
-	ticker := time.NewTicker(time.Second * time.Duration(s.config.Period))
+	ticker := time.NewTicker(s.config.Period)
 	for {
 		select {
 		case <-ctx.Done():
@@ -39,7 +39,7 @@ func (s *MetricsSyncer) Start(ctx context.Context, cancelFunc context.CancelFunc
 			return
 		case <-ticker.C:
 			end := time.Now()
-			start := end.Add(-time.Second * time.Duration(s.config.Period))
+			start := end.Add(-s.config.Period)
 			var data []awstypes.MetricDatum
 			for _, collector := range s.metricsCollectors {
 				d, err := collector.CollectMetrics(ctx, start, end)

@@ -16,4 +16,7 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, "https://api.cloudflare.com/client/v4/graphql", config.CloudFlareEndpointURL)
 	assert.EqualValues(t, time.Minute, config.Period)
 	assert.Equal(t, "Skpr/CloudFlare", config.MetricsNamespace)
+
+	assert.Equal(t, "foo", config.ExtraDimensions["project"])
+	assert.Equal(t, "bar", config.ExtraDimensions["env"])
 }

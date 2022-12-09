@@ -29,7 +29,7 @@ func main() {
 	}
 
 	fmt.Println("Starting server", GitVersion)
-	fmt.Println("Syncing metrics every", config.Period, "seconds")
+	fmt.Println("Syncing metrics every", config.Period)
 
 	// Handle interrupt signal gracefully.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -39,7 +39,7 @@ func main() {
 
 	cfg, err := awsconfig.LoadDefaultConfig(ctx)
 	if err != nil {
-		panic(fmt.Sprintf("failed to setup aws client: %d", err))
+		log.Fatal("failed to setup aws client", err)
 	}
 
 	cloudwatchClient := cloudwatch.NewFromConfig(cfg)

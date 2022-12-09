@@ -52,27 +52,34 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 		WithEnd(end).
 		WithHostnames(c.config.CloudFlareHostNames).
 		Build()
-	
+
 	err := c.client.Query(ctx, &q, v, graphql.OperationName("TopPaths"))
 	if err != nil {
 		return []awstypes.MetricDatum{}, err
 	}
 
+	var extraDimensions = make([]awstypes.Dimension, 0)
+	for k, v := range c.config.ExtraDimensions {
+		extraDimensions = append(extraDimensions, awstypes.Dimension{
+			Name:  aws.String(k),
+			Value: aws.String(v),
+		})
+	}
 	var data []awstypes.MetricDatum
 	for _, zone := range q.Viewer.Zones {
 		for _, metric := range zone.Metrics {
+			dimensions := []awstypes.Dimension{{
+				Name:  aws.String("statusCode"),
+				Value: aws.String(strconv.Itoa(metric.Dimensions.EdgeResponseStatus)),
+			}}
+			dimensions = append(dimensions, extraDimensions...)
 			d := []awstypes.MetricDatum{
 				{
 					MetricName: aws.String("statusCodeRequests"),
-					Dimensions: []awstypes.Dimension{
-						{
-							Name:  aws.String("statusCode"),
-							Value: aws.String(strconv.Itoa(metric.Dimensions.EdgeResponseStatus)),
-						},
-					},
-					Timestamp: aws.Time(end),
-					Value:     aws.Float64(float64(metric.Count)),
-					Unit:      awstypes.StandardUnitCount,
+					Dimensions: dimensions,
+					Timestamp:  aws.Time(end),
+					Value:      aws.Float64(float64(metric.Count)),
+					Unit:       awstypes.StandardUnitCount,
 				},
 			}
 			data = append(data, d...)

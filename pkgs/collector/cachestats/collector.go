@@ -51,27 +51,32 @@ func (c *Collector) CollectMetrics(ctx context.Context, start, end time.Time) ([
 		WithEnd(end).
 		WithHostnames(c.config.CloudFlareHostNames).
 		Build()
-
 	err := c.client.Query(ctx, &q, v, graphql.OperationName("CacheStatus"))
 	if err != nil {
 		return []awstypes.MetricDatum{}, err
 	}
-
+	var extraDimensions = make([]awstypes.Dimension, 0)
+	for k, v := range c.config.ExtraDimensions {
+		extraDimensions = append(extraDimensions, awstypes.Dimension{
+			Name:  aws.String(k),
+			Value: aws.String(v),
+		})
+	}
 	var data []awstypes.MetricDatum
 	for _, zone := range q.Viewer.Zones {
 		for _, cacheStatus := range zone.Metrics {
+			dimensions := []awstypes.Dimension{{
+				Name:  aws.String("cacheStatus"),
+				Value: aws.String(cacheStatus.Dimensions.CacheStatus),
+			}}
+			dimensions = append(dimensions, extraDimensions...)
 			d := []awstypes.MetricDatum{
 				{
 					MetricName: aws.String("cacheStatusRequests"),
-					Dimensions: []awstypes.Dimension{
-						{
-							Name:  aws.String("cacheStatus"),
-							Value: aws.String(cacheStatus.Dimensions.CacheStatus),
-						},
-					},
-					Timestamp: aws.Time(end),
-					Value:     aws.Float64(float64(cacheStatus.Count)),
-					Unit:      awstypes.StandardUnitCount,
+					Dimensions: dimensions,
+					Timestamp:  aws.Time(end),
+					Value:      aws.Float64(float64(cacheStatus.Count)),
+					Unit:       awstypes.StandardUnitCount,
 				},
 			}
 			data = append(data, d...)
